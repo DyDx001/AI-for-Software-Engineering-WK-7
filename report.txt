@@ -1,0 +1,15 @@
+Bias Audit Report: COMPAS Recidivism Risk Scores
+​This report analyzes the COMPAS recidivism risk score model for racial bias, using the AI Fairness 360 (AIF360) toolkit. The analysis focused on comparing the predictive outcomes for defendants identified as "African-American" (the unprivileged group) versus "Caucasian" (the privileged group).
+​Methodology
+​We loaded the pre-processed COMPAS dataset and isolated two key metrics:
+​Ground Truth: did_recidivate (whether the person actually re-offended within two years).
+​Prediction: decile_score > 4. This binarizes the model's score, classifying scores 5-10 as "high-risk" (1) and 1-4 as "low-risk" (0), mirroring the original ProPublica analysis.
+​Key Findings
+​The audit revealed a severe disparity in the False Positive Rate (FPR). A false positive occurs when the model incorrectly predicts a person will re-offend, but they do not. This is a highly harmful outcome, as it can lead to higher bail, parole denial, or stricter sentencing for an individual who is not a high risk.
+​FPR (Unprivileged - Black): 44.9%
+​FPR (Privileged - White): 23.5%
+​This finding is alarming: Black defendants who did not re-offend were almost twice as likely to be incorrectly labeled as "high-risk" than their White counterparts. The model is systematically biased against the unprivileged group.
+​Remediation Steps
+​Pre-processing (Reweighing): The data itself is the source of bias. A remediation strategy involves "reweighing" the dataset during training. We would assign a higher weight to samples of non-recidivating Black defendants to "teach" the model the importance of avoiding this specific false positive error.
+​In-processing (Fairness Constraints): Instead of just optimizing for accuracy, we can use aif360 to apply an "Equalized Odds" constraint during the model's training phase. This forces the model to find a solution that minimizes errors while also minimizing the FPR gap between the two racial groups.
+​Post-processing (Thresholding): The simplest fix is to adjust the decision threshold after the model is trained. We could set a different threshold for each group (e.g., predict "high-risk" for White defendants at a score of 5+, but for Black defendants at a score of 7+). This forces the FPRs to be equal, but it is controversial as it explicitly treats groups differently.
